@@ -221,7 +221,7 @@
   </div>
 
   <div class="video-wrapper">
-    <video id="video" autoplay muted playsinline></video>
+    <video id="video" autoplay muted playsinline webkit-playsinline></video>
   </div>
 
   <div class="form-section">
@@ -238,52 +238,115 @@
 </div>
 
 <script>
-  const API_URL   = localStorage.getItem('gasApiUrl') || GAS_API_URL;
+  const API_URL   = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '');
   const video     = document.getElementById('video');
   const statusDiv = document.getElementById('status');
   const btnSave   = document.getElementById('btnSave');
   const msgDiv    = document.getElementById('msg');
   const countSpan = document.getElementById('saveCount');
   let saveCounter = 0;
+  let isModelLoaded = false;
+  let isCameraActive = false;
 
-  if (!API_URL) {
-    statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a></span>';
-  } else {
-    window.addEventListener('load', initModels);
+  // ตรวจสอบ In-App Browser (LINE, Facebook)
+  function isInAppBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+    return /Line|FBAN|FBAV|Instagram|Twitter/i.test(ua);
   }
 
   function updateDots() {
     [1,2,3].forEach(i => {
       const dot = document.getElementById('dot' + i);
-      dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
+      if (dot) dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
     });
+  }
+
+  function checkReadiness() {
+    if (isModelLoaded && isCameraActive) {
+      statusDiv.innerHTML = '<span style="color:#34d399">✅ ระบบและกล้องพร้อมใช้งาน</span>';
+      btnSave.disabled = false;
+    }
+  }
+
+  async function getCameraStream() {
+    if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      throw new Error('SECURE_CONTEXT_REQUIRED');
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('MEDIA_DEVICES_NOT_SUPPORTED');
+    }
+
+    const constraintOptions = [
+      { video: { facingMode: { ideal: 'user' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      { video: { facingMode: 'user' }, audio: false },
+      { video: { facingMode: { ideal: 'user' } }, audio: false },
+      { video: true, audio: false }
+    ];
+
+    let lastErr = null;
+    for (const constraints of constraintOptions) {
+      try {
+        return await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr;
+  }
+
+  async function startCamera() {
+    try {
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
+
+      const stream = await getCameraStream();
+      video.srcObject = stream;
+      await video.play().catch(e => console.warn('Video play warning:', e));
+      isCameraActive = true;
+      checkReadiness();
+    } catch (err) {
+      isCameraActive = false;
+      let errText = '❌ เปิดกล้องไม่ได้: ' + (err.message || err.name);
+      if (isInAppBrowser()) {
+        errText = '⚠️ กำลังเปิดในแอป (LINE/Facebook) ซึ่งไม่อนุญาตให้เปิดกล้อง กรุณากดปุ่ม <b>...</b> แล้วเลือก <b>"เปิดในเบราว์เซอร์ภายนอก / Safari / Chrome"</b>';
+      } else if (err.message === 'SECURE_CONTEXT_REQUIRED') {
+        errText = '🔒 มือถือไม่อนุญาตให้เปิดกล้องผ่าน HTTP กรุณาเข้าใช้งานผ่าน <b>HTTPS</b> เท่านั้น';
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errText = '🚫 คุณยังไม่อนุญาตให้ใช้งานกล้อง กรุณาเปิดสิทธิ์กล้องในการตั้งค่าของเบราว์เซอร์ แล้วรีเฟรชหน้า';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errText = '📷 ไม่พบอุปกรณ์กล้องบนมือถือของคุณ';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errText = '⚠️ กล้องกำลังถูกใช้งานโดยแอปอื่น กรุณาปิดแอปอื่นแล้วลองใหม่';
+      }
+      statusDiv.innerHTML = '<span style="color:#f87171">' + errText + '</span><br><button onclick="startCamera()" style="margin-top:8px;padding:6px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:12px;color:#fff;cursor:pointer;">🔄 ลองเปิดกล้องอีกครั้ง</button>';
+    }
   }
 
   async function initModels() {
     try {
+      statusDiv.innerHTML = '<span class="spinner"></span> กำลังโหลด AI Model...';
       const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
       ]);
-      startCamera();
+      isModelLoaded = true;
+      checkReadiness();
     } catch (e) {
       statusDiv.innerHTML = '<span style="color:#f87171">❌ โหลด AI Model ล้มเหลว: ' + e.message + '</span>';
     }
   }
 
-  function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      .then(stream => {
-        video.srcObject = stream;
-        statusDiv.innerText = '';
-        btnSave.disabled = false;
-      })
-      .catch(err => {
-        statusDiv.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>';
-      });
-  }
+  window.addEventListener('load', () => {
+    if (!API_URL) {
+      statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a></span>';
+    }
+    // เริ่มเปิดกล้องและโหลดโมเดลควบคู่กันเพื่อความรวดเร็วและรองรับมือถือ
+    startCamera();
+    initModels();
+  });
 
   async function saveFace() {
     const name = document.getElementById('username').value.trim();

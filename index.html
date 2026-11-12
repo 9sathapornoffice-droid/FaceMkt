@@ -197,7 +197,8 @@
   </div>
 
   <script>
-    if (!localStorage.getItem('gasApiUrl') && typeof GAS_API_URL === 'undefined') {
+    const hasConfig = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' && GAS_API_URL.trim() !== '');
+    if (!hasConfig) {
       document.getElementById('apiWarning').style.display = 'block';
     }
   </script>

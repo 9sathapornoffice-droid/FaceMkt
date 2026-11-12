@@ -244,7 +244,7 @@
 
   // โหลดค่าที่บันทึกไว้
   window.onload = function() {
-    const savedUrl = localStorage.getItem('gasApiUrl') || GAS_API_URL;
+    const savedUrl = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '');
     document.getElementById('apiUrl').value = savedUrl;
 
     if (savedUrl) {
