@@ -364,15 +364,19 @@
             }
 
             const dist = haversineKm(currentLat, currentLng, config.lat, config.lng);
+            const distMeters = Math.round(dist * 1000);
+            const allowedMeters = Math.round(config.radius * 1000);
+            const distText = dist < 1 ? `${distMeters} เมตร` : `${dist.toFixed(3)} km`;
+            const allowedText = config.radius < 1 ? `${allowedMeters} เมตร` : `${config.radius} km`;
 
             if (dist <= config.radius) {
-              gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: OK (ห่างเป้าหมาย ' + dist.toFixed(3) + ' km)</span>';
+              gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (ห่างจุดเช็คอิน ${distText})</span>`;
               resolve();
               initFaceSystem();
             } else {
-              gpsStatus.innerHTML = '<span style="color:#f87171">📍 GPS: ห่างเกินไป (' + dist.toFixed(3) + ' km / กำหนด ' + config.radius + ' km)</span>';
+              gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (${distText} / กำหนด ${allowedText})</span>`;
               gpsAlertBox.style.display = 'block';
-              mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน';
+              mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน (อยู่นอกพื้นที่)';
               overlayStatus.innerText = 'Out of Range';
             }
           } catch (e) {

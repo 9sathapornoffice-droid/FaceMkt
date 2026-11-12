@@ -5,6 +5,16 @@
 // ============================================================
 
 function doGet(e) {
+  // ป้องกันกรณีเผลอกดปุ่ม "เรียกใช้" (Run) จากตัวแก้ไขสคริปต์ตรงๆ
+  if (!e || !e.parameter) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        status: 'OK', 
+        message: 'Google Apps Script API พร้อมทำงาน (Web App ทำงานปกติ)' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   const action = e.parameter.action;
   let result;
 
@@ -22,6 +32,12 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'No post data' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   let data;
   try {
     data = JSON.parse(e.postData.contents);
@@ -130,7 +146,7 @@ function getConfig() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Config');
 
-  let config = { lat: 0, lng: 0, radius: 0.5 };
+  let config = { lat: 0, lng: 0, radius: 0.02 };
 
   if (sheet) {
     const latVal = sheet.getRange('B2').getValue();
@@ -143,4 +159,10 @@ function getConfig() {
   }
 
   return config;
+}
+
+// ฟังก์ชันสำหรับทดสอบให้สิทธิ์การเข้าถึง Google Sheets ครั้งแรก
+function testSetup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log('เชื่อมต่อ Google Sheets สำเร็จ: ' + ss.getName());
 }
