@@ -268,7 +268,7 @@
   <div class="top-bar">
     <a href="index.html" class="back-btn">← กลับ</a>
     <div class="header-branding">
-      <img src="img/mascot.png" alt="ISUZU" class="header-logo-icon">
+      <img src="img/mascot.png" alt="ISUZU" class="header-logo-icon" onerror="this.style.display='none'">
       <h2>สแกนเข้างาน</h2>
     </div>
     <div class="spacer"></div>
@@ -303,7 +303,7 @@
 <div id="confirmModal" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-avatar-box">
-      <img src="img/mascot.png" alt="ISUZU Buddy" class="modal-avatar-img">
+      <img src="img/mascot.png" alt="ISUZU Buddy" class="modal-avatar-img" onerror="this.style.display='none'">
     </div>
     <p class="modal-title">ตรวจพบบุคคล (ISUZU TSH)</p>
     <div class="user-name" id="modalName">...</div>
@@ -327,7 +327,8 @@
   const MATCH_THRESHOLD = 0.45;
 
   let knownFaces   = [];
-  let scanInterval = null;
+  let isScanning   = false;
+  let scanTimeout  = null;
   let currentMatch = null;
   let currentLat   = null;
   let currentLng   = null;
@@ -340,7 +341,7 @@
 
   // ===== Init =====
   if (!API_URL) {
-    showError('ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a>');
+    showError('ยังไม่ได้ตั้งค่า API URL — <a href="index.html" style="color:#fbbf24">กลับหน้าหลักเพื่อตั้งค่าระบบ</a>');
   } else {
     window.addEventListener('load', init);
   }
@@ -506,32 +507,63 @@
     }
   }
 
-  // ===== Scan Loop =====
+  // ===== Scan Loop (Recursive setTimeout ป้องกันค้างบนมือถือ) =====
+  function stopScanLoop() {
+    isScanning = false;
+    if (scanTimeout) {
+      clearTimeout(scanTimeout);
+      scanTimeout = null;
+    }
+  }
+
   function startScanLoop() {
-    if (scanInterval) clearInterval(scanInterval);
-    overlayStatus.innerText     = 'มองกล้องเพื่อสแกน';
-    overlayStatus.style.background = 'rgba(0,0,0,0.65)';
+    stopScanLoop();
+    isScanning = true;
+    overlayStatus.innerText = 'มองกล้องเพื่อสแกน';
+    overlayStatus.style.background = 'rgba(11, 12, 16, 0.85)';
+    scanTick();
+  }
 
-    scanInterval = setInterval(async () => {
-      if (video.paused || video.ended) return;
+  async function scanTick() {
+    if (!isScanning) return;
 
+    if (video.paused || video.ended || video.readyState < 2) {
+      scanTimeout = setTimeout(scanTick, 350);
+      return;
+    }
+
+    try {
       const detection = await faceapi
         .detectSingleFace(video)
         .withFaceLandmarks()
         .withFaceDescriptor();
 
+      if (!isScanning) return;
+
       if (detection) {
         const best = findBestMatch(detection.descriptor);
         if (best.distance < MATCH_THRESHOLD) {
-          clearInterval(scanInterval);
-          document.getElementById('scanLine').classList.remove('active');
+          stopScanLoop();
+          const scanLine = document.getElementById('scanLine');
+          if (scanLine) scanLine.classList.remove('active');
           showModal(best);
+          return;
         } else {
-          overlayStatus.innerText            = 'ไม่รู้จัก (' + best.distance.toFixed(2) + ')';
-          overlayStatus.style.background     = 'rgba(239,68,68,0.6)';
+          overlayStatus.innerText = 'ไม่รู้จัก (' + best.distance.toFixed(2) + ')';
+          overlayStatus.style.background = 'rgba(230, 0, 18, 0.7)';
         }
+      } else {
+        // รีเซ็ตสถานะเมื่อไม่พบใบหน้า
+        overlayStatus.innerText = 'มองกล้องเพื่อสแกน';
+        overlayStatus.style.background = 'rgba(11, 12, 16, 0.85)';
       }
-    }, 500);
+    } catch (err) {
+      console.warn('Face detection error:', err);
+    }
+
+    if (isScanning) {
+      scanTimeout = setTimeout(scanTick, 350);
+    }
   }
 
   function findBestMatch(queryDesc) {
@@ -567,10 +599,16 @@
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'logAttendance', name: currentMatch, lat: currentLat, lng: currentLng })
       });
       const data = await res.json();
+      if (!data || !data.success) {
+        throw new Error((data && data.error) || 'ไม่สามารถบันทึกเวลาได้');
+      }
+
       alert('✅ ' + (data.message || 'บันทึกเวลาสำเร็จ'));
+      stopCamera();
       window.location.href = 'index.html';
     } catch (e) {
       alert('❌ บันทึกล้มเหลว: ' + e.message);
@@ -579,22 +617,29 @@
     }
   }
 
-  function cancelAttendance() {
-    confirmModal.style.display = 'none';
-    currentMatch = null;
-    if (scanInterval) clearInterval(scanInterval);
-
-    if (video.srcObject) {
+  function stopCamera() {
+    stopScanLoop();
+    if (video && video.srcObject) {
       video.srcObject.getTracks().forEach(t => t.stop());
       video.srcObject = null;
     }
     video.classList.remove('active');
-    document.getElementById('scanLine').classList.remove('active');
+    const scanLine = document.getElementById('scanLine');
+    if (scanLine) scanLine.classList.remove('active');
+  }
+
+  window.addEventListener('beforeunload', stopCamera);
+  window.addEventListener('pagehide', stopCamera);
+
+  function cancelAttendance() {
+    confirmModal.style.display = 'none';
+    currentMatch = null;
+    stopCamera();
 
     mainStatus.innerText    = '✅ ระบบพร้อมใช้งาน';
     mainStatus.style.color  = '#34d399';
     overlayStatus.innerText = 'รอโหลด...';
-    overlayStatus.style.background = 'rgba(0,0,0,0.65)';
+    overlayStatus.style.background = 'rgba(11, 12, 16, 0.85)';
     btnStart.style.display  = 'inline-block';
   }
 

@@ -223,7 +223,7 @@
   <div class="page-header">
     <a href="index.html" class="back-btn">← กลับ</a>
     <div class="header-logo-badge">
-      <img src="img/mascot.png" alt="ISUZU" class="header-mascot">
+      <img src="img/mascot.png" alt="ISUZU" class="header-mascot" onerror="this.style.display='none'">
     </div>
     <h2>ลงทะเบียนใบหน้าพนักงาน</h2>
     <p class="instruction">ISUZU TSH • บันทึก 3 มุม: หน้าตรง / หันซ้ายเล็กน้อย / หันขวาเล็กน้อย<br>เพื่อความแม่นยำในการจดจำใบหน้าสูงสุด</p>
@@ -262,7 +262,6 @@
   const statusDiv = document.getElementById('status');
   const btnSave   = document.getElementById('btnSave');
   const msgDiv    = document.getElementById('msg');
-  const countSpan = document.getElementById('saveCount');
   let saveCounter = 0;
   let isModelLoaded = false;
   let isCameraActive = false;
@@ -280,10 +279,15 @@
     });
   }
 
+  function updateSaveButton(text, loading = false) {
+    btnSave.disabled = loading;
+    btnSave.innerHTML = `${text} <span class="count-badge">${saveCounter}</span>`;
+  }
+
   function checkReadiness() {
     if (isModelLoaded && isCameraActive) {
       statusDiv.innerHTML = '<span style="color:#34d399">✅ ระบบและกล้องพร้อมใช้งาน</span>';
-      btnSave.disabled = false;
+      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
     }
   }
 
@@ -342,6 +346,16 @@
     }
   }
 
+  function stopCamera() {
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    }
+  }
+
+  window.addEventListener('beforeunload', stopCamera);
+  window.addEventListener('pagehide', stopCamera);
+
   async function initModels() {
     try {
       statusDiv.innerHTML = '<span class="spinner"></span> กำลังโหลด AI Model...';
@@ -360,7 +374,7 @@
 
   window.addEventListener('load', () => {
     if (!API_URL) {
-      statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a></span>';
+      statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="index.html" style="color:#fbbf24">กลับหน้าหลักเพื่อตั้งค่าระบบ</a></span>';
     }
     // เริ่มเปิดกล้องและโหลดโมเดลควบคู่กันเพื่อความรวดเร็วและรองรับมือถือ
     startCamera();
@@ -371,8 +385,11 @@
     const name = document.getElementById('username').value.trim();
     if (!name) return alert('กรุณาใส่ชื่อก่อน');
 
-    btnSave.disabled = true;
-    btnSave.innerHTML = '⏳ กำลังประมวลผล... <span class="count-badge">' + saveCounter + '</span>';
+    if (!video.srcObject || video.readyState < 2) {
+      return alert('กล้องยังไม่พร้อมใช้งาน กรุณารอสักครู่แล้วลองใหม่');
+    }
+
+    updateSaveButton('⏳ กำลังประมวลผล...', true);
     msgDiv.innerText = '';
 
     const detection = await faceapi
@@ -382,8 +399,7 @@
 
     if (!detection) {
       alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
-      btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
       return;
     }
 
@@ -392,20 +408,21 @@
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: descriptorArray })
       });
       const data = await res.json();
+      if (!data || !data.success) {
+        throw new Error((data && data.error) || 'บันทึกไม่สำเร็จ');
+      }
 
       saveCounter++;
-      countSpan.innerText = saveCounter;
       updateDots();
       msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกครั้งที่ ' + saveCounter + ' สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>';
-      btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      updateSaveButton('📸 บันทึกเพิ่ม', false);
     } catch (e) {
       msgDiv.innerHTML = '<span class="msg-error">❌ บันทึกล้มเหลว: ' + e.message + '</span>';
-      btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
     }
   }
 </script>

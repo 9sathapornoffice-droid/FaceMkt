@@ -158,14 +158,6 @@
       box-shadow: 0 8px 30px rgba(230,0,18,0.55);
       transform: translateY(-2px);
     }
-      color: white;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
-      font-size: 16px; padding: 15px;
-    }
-    .btn-save:hover {
-      box-shadow: 0 8px 30px rgba(16,185,129,0.5);
-      transform: translateY(-2px);
-    }
 
     .btn-back {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -284,8 +276,8 @@
     fetch(apiUrl + '?action=getConfig')
       .then(r => r.json())
       .then(config => {
-        document.getElementById('lat').value    = config.lat    || '';
-        document.getElementById('lng').value    = config.lng    || '';
+        document.getElementById('lat').value    = (config.lat !== undefined && config.lat !== 0) ? config.lat : '';
+        document.getElementById('lng').value    = (config.lng !== undefined && config.lng !== 0) ? config.lng : '';
         document.getElementById('radius').value = (config.radius !== undefined && config.radius !== '') ? config.radius : '0.02';
       })
       .catch(() => {}); // ถ้าโหลดไม่ได้ก็ข้ามไป
@@ -314,7 +306,7 @@
     const radius = document.getElementById('radius').value;
 
     if (!apiUrl) return showMsg('❌ กรุณากรอก API URL', 'error');
-    if (!lat || !lng || !radius) return showMsg('❌ กรุณากรอกข้อมูล GPS ให้ครบ', 'error');
+    if (lat === '' || lng === '' || radius === '') return showMsg('❌ กรุณากรอกข้อมูล GPS ให้ครบ', 'error');
 
     // บันทึก API URL ลง localStorage
     localStorage.setItem('gasApiUrl', apiUrl);
@@ -323,10 +315,15 @@
     try {
       const res = await fetch(apiUrl, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveConfig', lat, lng, radius })
       });
       const data = await res.json();
-      showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
+      if (data && data.success) {
+        showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
+      } else {
+        throw new Error((data && data.error) || 'บันทึกไม่สำเร็จ');
+      }
     } catch (e) {
       showMsg('❌ เชื่อมต่อ API ไม่ได้: ' + e.message, 'error');
     }

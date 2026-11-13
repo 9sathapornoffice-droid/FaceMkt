@@ -457,6 +457,10 @@
       20%, 60% { transform: translateX(-6px); }
       40%, 80% { transform: translateX(6px); }
     }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(0.95); }
+      50% { opacity: 0.85; transform: scale(1.08); }
+    }
   </style>
 </head>
 <body>
@@ -467,9 +471,9 @@
     <div class="brand-header">
       <div class="mascot-container">
         <div class="mascot-glow"></div>
-        <img src="img/mascot.png" alt="ISUZU Buddy" class="mascot-img">
+        <img src="img/mascot.png" alt="ISUZU Buddy" class="mascot-img" onerror="this.style.display='none'">
       </div>
-      <img src="img/biturbo-logo.png" alt="ISUZU BiTurbo" class="biturbo-badge">
+      <img src="img/biturbo-logo.png" alt="ISUZU BiTurbo" class="biturbo-badge" onerror="this.style.display='none'">
       <div class="tsh-tag">ISUZU TSH • อีซูซุตังเซียฮวด</div>
       <h1>ระบบบันทึกเวลาเข้างาน</h1>
       <p class="subtitle">Face Recognition &amp; GPS Attendance</p>

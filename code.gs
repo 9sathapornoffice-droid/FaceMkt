@@ -1,5 +1,5 @@
 // ============================================================
-//  GOOGLE APPS SCRIPT — REST API Backend
+//  GOOGLE APPS SCRIPT — REST API Backend (ISUZU TSH)
 //  วิธีใช้: Deploy > New deployment > Web App
 //           Execute as: Me | Who has access: Anyone
 // ============================================================
@@ -34,7 +34,7 @@ function doGet(e) {
 function doPost(e) {
   if (!e || !e.postData || !e.postData.contents) {
     return ContentService
-      .createTextOutput(JSON.stringify({ error: 'No post data' }))
+      .createTextOutput(JSON.stringify({ success: false, error: 'No post data' }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -43,21 +43,37 @@ function doPost(e) {
     data = JSON.parse(e.postData.contents);
   } catch (err) {
     return ContentService
-      .createTextOutput(JSON.stringify({ error: 'Invalid JSON body' }))
+      .createTextOutput(JSON.stringify({ success: false, error: 'Invalid JSON body' }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  const action = data.action;
-  let result;
+  // ใช้ LockService เพื่อป้องกันพนักงานสแกนพร้อมกันแล้วข้อมูลชนกัน
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); // รอคิวล็อกสูงสุด 10 วินาที
+  } catch (lockErr) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: 'Server busy, please try again' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
-  if (action === 'registerUser') {
-    result = registerUser(data.name, data.faceDescriptor);
-  } else if (action === 'logAttendance') {
-    result = logAttendance(data.name, data.lat, data.lng);
-  } else if (action === 'saveConfig') {
-    result = saveConfig(data.lat, data.lng, data.radius);
-  } else {
-    result = { error: 'Unknown action: ' + action };
+  let result;
+  try {
+    const action = data.action;
+
+    if (action === 'registerUser') {
+      result = registerUser(data.name, data.faceDescriptor);
+    } else if (action === 'logAttendance') {
+      result = logAttendance(data.name, data.lat, data.lng);
+    } else if (action === 'saveConfig') {
+      result = saveConfig(data.lat, data.lng, data.radius);
+    } else {
+      result = { success: false, error: 'Unknown action: ' + action };
+    }
+  } catch (processErr) {
+    result = { success: false, error: processErr.message };
+  } finally {
+    lock.releaseLock();
   }
 
   return ContentService
@@ -67,6 +83,10 @@ function doPost(e) {
 
 // --- ส่วนจัดการใบหน้า (Users) ---
 function registerUser(name, faceDescriptor) {
+  if (!name || !faceDescriptor) {
+    return { success: false, error: 'Missing required fields' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Users');
   if (!sheet) sheet = ss.insertSheet('Users');
@@ -98,6 +118,10 @@ function getKnownFaces() {
 
 // --- ส่วนบันทึกเวลา (Attendance) ---
 function logAttendance(name, lat, lng) {
+  if (!name) {
+    return { success: false, error: 'Missing required fields' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Attendance');
   if (!sheet) {
@@ -123,6 +147,14 @@ function logAttendance(name, lat, lng) {
 
 // --- ส่วนจัดการ Config (GPS) ---
 function saveConfig(lat, lng, radius) {
+  const parsedLat = parseFloat(lat);
+  const parsedLng = parseFloat(lng);
+  const parsedRadius = parseFloat(radius);
+
+  if (isNaN(parsedLat) || isNaN(parsedLng) || isNaN(parsedRadius)) {
+    return { success: false, error: 'Invalid coordinate or radius format' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName('Config');
 
@@ -135,9 +167,9 @@ function saveConfig(lat, lng, radius) {
     sheet.setColumnWidth(1, 150);
   }
 
-  sheet.getRange('B2').setValue(lat);
-  sheet.getRange('B3').setValue(lng);
-  sheet.getRange('B4').setValue(radius);
+  sheet.getRange('B2').setValue(parsedLat);
+  sheet.getRange('B3').setValue(parsedLng);
+  sheet.getRange('B4').setValue(parsedRadius);
 
   return { success: true, message: 'บันทึกการตั้งค่าลง Google Sheets เรียบร้อย' };
 }
@@ -161,7 +193,7 @@ function getConfig() {
   return config;
 }
 
-// ฟังก์ชันสำหรับทดสอบให้สิทธิ์การเข้าถึง Google Sheets ครั้งแรก
+// ฟังก์ชันสำหรับทดสอบขอสิทธิ์เข้าถึง Google Sheets ครั้งแรก
 function testSetup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   Logger.log('เชื่อมต่อ Google Sheets สำเร็จ: ' + ss.getName());
