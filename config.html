@@ -12,12 +12,15 @@
     body {
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
-      color: #e2e8f0;
+      background-color: #0b0c10;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(230, 0, 18, 0.22) 0%, transparent 60%),
+        linear-gradient(180deg, #111218 0%, #08090c 100%);
+      color: #f1f5f9;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 28px 16px 60px;
+      padding: 24px 16px 60px;
       position: relative;
     }
 
@@ -25,9 +28,9 @@
       content: '';
       position: fixed;
       width: 400px; height: 400px;
-      background: #06b6d4;
+      background: #e60012;
       border-radius: 50%;
-      filter: blur(100px);
+      filter: blur(140px);
       opacity: 0.08;
       top: -100px; right: -100px;
       pointer-events: none; z-index: 0;
@@ -41,36 +44,45 @@
     }
 
     /* Header */
-    .page-header { margin-bottom: 24px; }
+    .page-header { margin-bottom: 22px; text-align: center; }
     .back-btn {
       display: inline-flex; align-items: center; gap: 6px;
-      color: #64748b; text-decoration: none; font-size: 0.88em;
-      padding: 6px 12px; border-radius: 20px;
+      color: #94a3b8; text-decoration: none; font-size: 0.88em;
+      padding: 6px 14px; border-radius: 20px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.12);
       transition: all 0.25s ease;
       margin-bottom: 14px;
     }
-    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+
+    .header-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .header-mascot {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
 
     h2 {
-      font-size: 1.6em; font-weight: 700;
-      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 1.5em; font-weight: 700;
+      color: #ffffff;
       margin-bottom: 4px;
     }
-    .page-subtitle { font-size: 0.83em; color: #64748b; }
+    .page-subtitle { font-size: 0.83em; color: #94a3b8; }
 
     /* Card */
     .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
+      background: rgba(22, 24, 34, 0.75);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 22px;
       padding: 24px 22px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       margin-bottom: 16px;
     }
 
@@ -78,66 +90,74 @@
       display: flex; align-items: center; gap: 10px;
       margin-bottom: 18px;
       padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .section-icon {
       width: 36px; height: 36px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px;
+      font-size: 18px;
     }
-    .section-icon.indigo  { background: rgba(99,102,241,0.2); }
-    .section-icon.cyan    { background: rgba(6,182,212,0.2);  }
-    .section-title-text { font-weight: 600; font-size: 0.95em; color: #c7d2fe; }
+    .section-icon.red     { background: rgba(230,0,18,0.2); }
+    .section-icon.cyan    { background: rgba(6,182,212,0.2); }
+    .section-title-text { font-weight: 700; font-size: 0.95em; color: #ffffff; }
 
     /* Inputs */
     label {
-      display: block; font-size: 0.82em; font-weight: 600;
-      color: #94a3b8; margin-bottom: 6px; letter-spacing: 0.03em;
+      display: block; font-size: 0.82em; font-weight: 700;
+      color: #cbd5e1; margin-bottom: 6px; letter-spacing: 0.03em;
     }
     input {
       width: 100%;
-      padding: 12px 14px;
+      padding: 13px 14px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.14);
       border-radius: 12px;
-      color: #e2e8f0;
+      color: #ffffff;
       font-size: 14px;
       font-family: 'Sarabun', sans-serif;
       outline: none;
       transition: all 0.3s ease;
       margin-bottom: 14px;
     }
-    input::placeholder { color: #334155; }
+    input::placeholder { color: #64748b; }
     input:focus {
-      border-color: rgba(99,102,241,0.5);
-      background: rgba(99,102,241,0.07);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      border-color: rgba(230,0,18,0.6);
+      background: rgba(230,0,18,0.05);
+      box-shadow: 0 0 0 3px rgba(230,0,18,0.2);
     }
     .note {
-      font-size: 0.78em; color: #475569;
+      font-size: 0.78em; color: #94a3b8;
       margin-top: -10px; margin-bottom: 14px; line-height: 1.5;
     }
 
     /* Buttons */
     .btn {
       border: none; border-radius: 12px; cursor: pointer;
-      font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600;
-      padding: 13px; width: 100%;
-      transition: all 0.3s ease;
+      font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 700;
+      padding: 14px; width: 100%;
+      transition: all 0.25s ease;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-get-loc {
-      background: linear-gradient(135deg, #0891b2, #06b6d4);
+      background: linear-gradient(135deg, #0284c7, #0369a1);
       color: white;
-      box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+      box-shadow: 0 4px 15px rgba(2,132,199,0.3);
       margin-bottom: 18px;
     }
     .btn-get-loc:hover {
-      box-shadow: 0 6px 25px rgba(6,182,212,0.45);
+      box-shadow: 0 6px 20px rgba(2,132,199,0.5);
       transform: translateY(-1px);
     }
     .btn-save {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, #e60012, #a8000d);
+      color: white;
+      box-shadow: 0 6px 20px rgba(230,0,18,0.35);
+      font-size: 16px; padding: 16px;
+    }
+    .btn-save:hover {
+      box-shadow: 0 8px 30px rgba(230,0,18,0.55);
+      transform: translateY(-2px);
+    }
       color: white;
       box-shadow: 0 4px 20px rgba(16,185,129,0.3);
       font-size: 16px; padding: 15px;
@@ -187,14 +207,17 @@
 
   <div class="page-header">
     <a href="index.html" class="back-btn">← กลับ</a>
-    <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="page-subtitle">จัดการ API และจุดเช็คอิน GPS</p>
+    <div class="header-logo-badge">
+      <img src="img/mascot.png" alt="ISUZU" class="header-mascot">
+    </div>
+    <h2>ตั้งค่าระบบ</h2>
+    <p class="page-subtitle">ISUZU TSH • จัดการ API และจุดเช็คอิน GPS</p>
   </div>
 
   <!-- API URL Card -->
   <div class="card">
     <div class="section-header">
-      <div class="section-icon indigo">🔗</div>
+      <div class="section-icon red">🔗</div>
       <span class="section-title-text">Google Apps Script API</span>
     </div>
 
