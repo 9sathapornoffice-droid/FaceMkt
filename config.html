@@ -263,6 +263,11 @@
 </div>
 
 <script>
+  // ป้องกันการเข้าถึงหน้าตั้งค่าโดยไม่ผ่านการใส่รหัสผ่าน
+  if (sessionStorage.getItem('isAdminAuth') !== 'true') {
+    window.location.replace('index.html');
+  }
+
   const msgDiv = document.getElementById('msg');
 
   // โหลดค่าที่บันทึกไว้

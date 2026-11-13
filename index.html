@@ -297,9 +297,165 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.4; transform: scale(0.95); }
-      50% { opacity: 0.75; transform: scale(1.1); }
+    /* Modal Password */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: linear-gradient(160deg, #1b1c26 0%, #111218 100%);
+      border: 1px solid rgba(230, 0, 18, 0.35);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 0, 18, 0.15);
+      border-radius: 24px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 370px;
+      text-align: center;
+      animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .modal-icon-shield {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: rgba(230, 0, 18, 0.15);
+      border: 1.5px solid rgba(230, 0, 18, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 14px;
+      box-shadow: 0 4px 20px rgba(230, 0, 18, 0.3);
+    }
+
+    .modal-box h3 {
+      font-size: 1.25em;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
+      font-size: 0.85em;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .pwd-input-wrap {
+      position: relative;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .pwd-input-wrap input {
+      width: 100%;
+      padding: 14px 46px 14px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      color: #ffffff;
+      font-size: 15px;
+      font-family: 'Sarabun', sans-serif;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+    .pwd-input-wrap input:focus {
+      border-color: rgba(230, 0, 18, 0.7);
+      background: rgba(230, 0, 18, 0.05);
+      box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.2);
+    }
+    .pwd-input-wrap input.error-shake {
+      border-color: #f87171;
+      animation: shake 0.4s ease;
+    }
+
+    .btn-toggle-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 18px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease;
+    }
+    .btn-toggle-eye:hover {
+      color: #ffffff;
+    }
+
+    .pwd-error-msg {
+      display: none;
+      color: #f87171;
+      font-size: 0.84em;
+      font-weight: 600;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-pwd-cancel {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+    }
+    .btn-pwd-cancel:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    .btn-pwd-confirm {
+      background: linear-gradient(135deg, #e60012, #a8000d);
+      color: white;
+      box-shadow: 0 4px 18px rgba(230, 0, 18, 0.4);
+    }
+    .btn-pwd-confirm:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(230, 0, 18, 0.6);
+    }
+
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.92); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
     }
   </style>
 </head>
@@ -320,7 +476,7 @@
     </div>
 
     <div id="apiWarning" class="api-warning">
-      ⚠️ ยังไม่ได้ตั้งค่าระบบ — <a href="config.html">ไปที่หน้าตั้งค่า</a>
+      ⚠️ ยังไม่ได้ตั้งค่าระบบ — <a href="javascript:void(0)" onclick="openPasswordModal()">ไปที่หน้าตั้งค่า</a>
     </div>
 
     <div class="menu-cards">
@@ -344,11 +500,11 @@
         <span class="card-arrow">›</span>
       </a>
 
-      <!-- 3. ตั้งค่าระบบ -->
-      <a href="config.html" class="btn-menu btn-config">
+      <!-- 3. ตั้งค่าระบบ (ล็อกรหัสผ่าน Admin) -->
+      <a href="javascript:void(0)" onclick="openPasswordModal()" class="btn-menu btn-config">
         <div class="card-icon">⚙️</div>
         <div class="card-text">
-          <div class="card-title">ตั้งค่าระบบ</div>
+          <div class="card-title">ตั้งค่าระบบ <span style="font-size:0.75em; color:#94a3b8;">🔒</span></div>
           <div class="card-desc">จัดการพิกัด GPS และ API (Admin)</div>
         </div>
         <span class="card-arrow">›</span>
@@ -361,11 +517,97 @@
     </div>
   </div>
 
+  <!-- Password Protection Modal -->
+  <div id="pwdModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon-shield">🔒</div>
+      <h3>ยืนยันสิทธิ์ผู้ดูแลระบบ (Admin)</h3>
+      <p class="modal-desc">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งานหน้าตั้งค่าระบบ</p>
+
+      <div class="pwd-input-wrap">
+        <input type="password" id="adminPassword" placeholder="กรอกรหัสผ่าน Admin" autocomplete="off" onkeydown="handlePwdKey(event)">
+        <button type="button" class="btn-toggle-eye" id="btnEye" onclick="togglePasswordVisibility()" title="แสดง/ซ่อนรหัสผ่าน">
+          👁️
+        </button>
+      </div>
+
+      <div id="pwdError" class="pwd-error-msg">รหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง</div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-btn btn-pwd-cancel" onclick="closePasswordModal()">ยกเลิก</button>
+        <button type="button" class="modal-btn btn-pwd-confirm" onclick="submitPassword()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const hasConfig = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' && GAS_API_URL.trim() !== '');
     if (!hasConfig) {
       document.getElementById('apiWarning').style.display = 'block';
     }
+
+    const CORRECT_PASSWORD = 'TSHMKT2535';
+    const pwdModal = document.getElementById('pwdModal');
+    const pwdInput = document.getElementById('adminPassword');
+    const pwdError = document.getElementById('pwdError');
+    const btnEye   = document.getElementById('btnEye');
+
+    function openPasswordModal() {
+      pwdInput.value = '';
+      pwdInput.type = 'password';
+      btnEye.textContent = '👁️';
+      pwdError.style.display = 'none';
+      pwdInput.classList.remove('error-shake');
+      pwdModal.classList.add('active');
+      setTimeout(() => pwdInput.focus(), 150);
+    }
+
+    function closePasswordModal() {
+      pwdModal.classList.remove('active');
+      pwdInput.value = '';
+      pwdError.style.display = 'none';
+    }
+
+    function togglePasswordVisibility() {
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        btnEye.textContent = '🙈';
+      } else {
+        pwdInput.type = 'password';
+        btnEye.textContent = '👁️';
+      }
+      pwdInput.focus();
+    }
+
+    function handlePwdKey(e) {
+      if (e.key === 'Enter') {
+        submitPassword();
+      }
+    }
+
+    function submitPassword() {
+      const entered = pwdInput.value;
+      if (entered === CORRECT_PASSWORD) {
+        pwdError.style.display = 'none';
+        sessionStorage.setItem('isAdminAuth', 'true');
+        closePasswordModal();
+        window.location.href = 'config.html';
+      } else {
+        pwdError.style.display = 'block';
+        pwdInput.value = '';
+        pwdInput.classList.remove('error-shake');
+        void pwdInput.offsetWidth; // trigger reflow for animation
+        pwdInput.classList.add('error-shake');
+        pwdInput.focus();
+      }
+    }
+
+    // ปิด Modal เมื่อคลิกพื้นหลังสีดำ
+    pwdModal.addEventListener('click', function(e) {
+      if (e.target === pwdModal) {
+        closePasswordModal();
+      }
+    });
   </script>
 </body>
 </html>
