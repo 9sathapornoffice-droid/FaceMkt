@@ -100,6 +100,12 @@
       box-shadow: 0 0 12px rgba(230,0,18,0.8);
       transform: scale(1.15);
     }
+    .dot.completed {
+      background: #10b981 !important;
+      border-color: #34d399 !important;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.9) !important;
+      transform: scale(1.2);
+    }
 
     /* Status */
     #status {
@@ -216,6 +222,143 @@
     /* Animations */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin   { to { transform: rotate(360deg); } }
+
+    /* Success Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 9, 12, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: linear-gradient(160deg, rgba(28, 30, 42, 0.95), rgba(14, 15, 20, 0.98));
+      border: 1px solid rgba(230, 0, 18, 0.35);
+      box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(230, 0, 18, 0.2);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 26px;
+      width: 100%;
+      max-width: 420px;
+      padding: 34px 24px 28px;
+      text-align: center;
+      animation: modalScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalScaleUp {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon-wrapper {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.28));
+      border: 2px solid #10b981;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: checkBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes checkBounce {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .modal-icon-svg {
+      width: 44px;
+      height: 44px;
+      color: #10b981;
+    }
+
+    .modal-title {
+      font-size: 1.38em;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: 0.01em;
+    }
+
+    .modal-desc {
+      font-size: 0.9em;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin-bottom: 26px;
+      padding: 0 8px;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 0.95em;
+      font-weight: 600;
+      font-family: 'Sarabun', sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+
+    .modal-btn-primary {
+      background: linear-gradient(135deg, #e60012, #a8000d);
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(230, 0, 18, 0.45);
+    }
+
+    .modal-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(230, 0, 18, 0.65);
+    }
+
+    .modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .modal-btn-back {
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.88em;
+      padding: 10px;
+    }
+
+    .modal-btn-back:hover {
+      color: #e2e8f0;
+    }
   </style>
 </head>
 <body>
@@ -249,10 +392,36 @@
     </div>
 
     <button id="btnSave" onclick="saveFace()" disabled>
-      📸 บันทึกใบหน้า <span id="saveCount" class="count-badge">0</span>
+      📸 บันทึกใบหน้า (ครั้งที่ 1: หน้าตรง) [0/3]
     </button>
 
     <div id="msg"></div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-icon-wrapper">
+      <svg class="modal-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="modal-title">ลงทะเบียนใบหน้าเสร็จสิ้น!</div>
+    <p class="modal-desc">
+      บันทึกข้อมูลใบหน้าของ <strong id="modalEmployeeName"></strong> ครบทั้ง 3 มุมเรียบร้อยแล้ว คุณสามารถไปที่หน้าสแกนเพื่อลงเวลาเข้างานได้ทันที
+    </p>
+    <div class="modal-actions">
+      <a href="scan.html" class="modal-btn modal-btn-primary">
+        📷 ไปหน้าสแกนเข้างานเลย
+      </a>
+      <button type="button" class="modal-btn modal-btn-secondary" onclick="resetForNextPerson()">
+        👤 ลงทะเบียนคนต่อไป
+      </button>
+      <a href="index.html" class="modal-btn modal-btn-back">
+        ← กลับเมนูหลัก
+      </a>
+    </div>
   </div>
 </div>
 
@@ -272,23 +441,62 @@
     return /Line|FBAN|FBAV|Instagram|Twitter/i.test(ua);
   }
 
+  function getButtonLabel(counter) {
+    if (counter === 0) return '📸 บันทึกใบหน้า (ครั้งที่ 1: หน้าตรง) [0/3]';
+    if (counter === 1) return '📸 บันทึกมุมที่ 2 (หันซ้ายเล็กน้อย) [1/3]';
+    if (counter === 2) return '📸 บันทึกมุมที่ 3 (หันขวาเล็กน้อย) [2/3]';
+    return '✅ บันทึกครบ 3 มุมแล้ว [3/3]';
+  }
+
   function updateDots() {
-    [1,2,3].forEach(i => {
+    [1, 2, 3].forEach(i => {
       const dot = document.getElementById('dot' + i);
-      if (dot) dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
+      if (!dot) return;
+      if (saveCounter >= 3) {
+        dot.className = 'dot completed';
+      } else {
+        dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
+      }
     });
   }
 
   function updateSaveButton(text, loading = false) {
     btnSave.disabled = loading;
-    btnSave.innerHTML = `${text} <span class="count-badge">${saveCounter}</span>`;
+    btnSave.textContent = text;
   }
 
   function checkReadiness() {
     if (isModelLoaded && isCameraActive) {
       statusDiv.innerHTML = '<span style="color:#34d399">✅ ระบบและกล้องพร้อมใช้งาน</span>';
-      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
+      if (saveCounter < 3) {
+        updateSaveButton(getButtonLabel(saveCounter), false);
+      }
     }
+  }
+
+  function showSuccessModal(name) {
+    const modal = document.getElementById('successModal');
+    const nameSpan = document.getElementById('modalEmployeeName');
+    if (nameSpan) nameSpan.textContent = name;
+    if (modal) modal.classList.add('active');
+  }
+
+  function resetForNextPerson() {
+    const modal = document.getElementById('successModal');
+    if (modal) modal.classList.remove('active');
+
+    saveCounter = 0;
+    const usernameInput = document.getElementById('username');
+    usernameInput.readOnly = false;
+    usernameInput.value = '';
+
+    updateDots();
+    msgDiv.innerHTML = '';
+    statusDiv.innerHTML = '<span class="spinner"></span> กำลังเปิดกล้อง...';
+    updateSaveButton(getButtonLabel(0), true);
+
+    startCamera();
+    setTimeout(() => usernameInput.focus(), 100);
   }
 
   async function getCameraStream() {
@@ -351,6 +559,7 @@
       video.srcObject.getTracks().forEach(t => t.stop());
       video.srcObject = null;
     }
+    isCameraActive = false;
   }
 
   window.addEventListener('beforeunload', stopCamera);
@@ -382,7 +591,8 @@
   });
 
   async function saveFace() {
-    const name = document.getElementById('username').value.trim();
+    const usernameInput = document.getElementById('username');
+    const name = usernameInput.value.trim();
     if (!name) return alert('กรุณาใส่ชื่อก่อน');
 
     if (!video.srcObject || video.readyState < 2) {
@@ -399,7 +609,7 @@
 
     if (!detection) {
       alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
-      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
+      updateSaveButton(getButtonLabel(saveCounter), false);
       return;
     }
 
@@ -418,11 +628,24 @@
 
       saveCounter++;
       updateDots();
-      msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกครั้งที่ ' + saveCounter + ' สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>';
-      updateSaveButton('📸 บันทึกเพิ่ม', false);
+
+      if (saveCounter === 1) {
+        usernameInput.readOnly = true;
+        msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกมุมที่ 1 (หน้าตรง) สำเร็จ! กรุณาหันซ้ายเล็กน้อยแล้วกดบันทึกครั้งที่ 2</span>';
+        updateSaveButton(getButtonLabel(1), false);
+      } else if (saveCounter === 2) {
+        msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกมุมที่ 2 สำเร็จ! กรุณาหันขวาเล็กน้อยแล้วกดบันทึกครั้งสุดท้าย</span>';
+        updateSaveButton(getButtonLabel(2), false);
+      } else if (saveCounter >= 3) {
+        stopCamera();
+        statusDiv.innerHTML = '<span style="color:#34d399">🎉 ลงทะเบียนใบหน้าครบ 3 มุมเสร็จสมบูรณ์!</span>';
+        msgDiv.innerHTML = '<span class="msg-success">🎉 บันทึกครบทั้ง 3 มุมเรียบร้อยแล้ว</span>';
+        updateSaveButton(getButtonLabel(3), true);
+        showSuccessModal(name);
+      }
     } catch (e) {
       msgDiv.innerHTML = '<span class="msg-error">❌ บันทึกล้มเหลว: ' + e.message + '</span>';
-      updateSaveButton(saveCounter > 0 ? '📸 บันทึกเพิ่ม' : '📸 บันทึกใบหน้า', false);
+      updateSaveButton(getButtonLabel(saveCounter), false);
     }
   }
 </script>
