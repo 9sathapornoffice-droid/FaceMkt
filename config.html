@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ตั้งค่าระบบ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/api-config.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -142,11 +144,18 @@
       background: linear-gradient(135deg, #0284c7, #0369a1);
       color: white;
       box-shadow: 0 4px 15px rgba(2,132,199,0.3);
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
-    .btn-get-loc:hover {
+    .btn-get-loc:hover:not(:disabled) {
       box-shadow: 0 6px 20px rgba(2,132,199,0.5);
       transform: translateY(-1px);
+    }
+    .btn-get-loc:disabled {
+      background: rgba(255,255,255,0.08);
+      color: #64748b;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
     }
     .btn-save {
       background: linear-gradient(135deg, #e60012, #a8000d);
@@ -228,6 +237,9 @@
     <button class="btn btn-get-loc" onclick="getCurrentLocation()">
       📍 ดึงตำแหน่งปัจจุบันของฉัน
     </button>
+    <div id="gpsAccuracyInfo" style="display: none; font-size: 0.84em; line-height: 1.5; padding: 10px 14px; border-radius: 12px; margin-bottom: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);"></div>
+
+    <div id="mapPreview" style="height: 220px; border-radius: 14px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.15); z-index: 1; overflow: hidden;"></div>
 
     <div class="input-row">
       <div>
@@ -261,9 +273,111 @@
   }
 
   const msgDiv = document.getElementById('msg');
+  let map = null;
+  let marker = null;
+  let circle = null;
+
+  let watchId = null;
+  let gpsTimeout = null;
+  let bestCoords = null;
+
+  function initMap() {
+    const latInput = document.getElementById('lat');
+    const lngInput = document.getElementById('lng');
+    const radiusInput = document.getElementById('radius');
+
+    let initLat = parseFloat(latInput.value);
+    let initLng = parseFloat(lngInput.value);
+    const hasValidCoords = !isNaN(initLat) && !isNaN(initLng);
+
+    if (!hasValidCoords) {
+      initLat = 13.7563;
+      initLng = 100.5018;
+    }
+
+    const radKm = parseFloat(radiusInput.value) || 0.02;
+
+    // Leaflet icon fix for missing asset paths
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+    });
+
+    map = L.map('mapPreview', {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([initLat, initLng], hasValidCoords ? 17 : 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(map);
+
+    marker = L.marker([initLat, initLng], { draggable: true }).addTo(map);
+
+    circle = L.circle([initLat, initLng], {
+      color: '#e60012',
+      fillColor: '#e60012',
+      fillOpacity: 0.18,
+      radius: radKm * 1000,
+      weight: 2
+    }).addTo(map);
+
+    const updateInputs = (latlng) => {
+      latInput.value = latlng.lat.toFixed(7);
+      lngInput.value = latlng.lng.toFixed(7);
+      if (circle) circle.setLatLng(latlng);
+    };
+
+    marker.on('drag', e => updateInputs(e.latlng));
+    marker.on('dragend', e => updateInputs(e.latlng));
+
+    map.on('click', e => {
+      marker.setLatLng(e.latlng);
+      updateInputs(e.latlng);
+    });
+
+    setTimeout(() => {
+      if (map) map.invalidateSize();
+    }, 250);
+  }
+
+  function updateMapPosition(lat, lng, pan = true) {
+    if (!map || !marker) return;
+    const pos = [lat, lng];
+    marker.setLatLng(pos);
+    const radKm = parseFloat(document.getElementById('radius').value) || 0.02;
+    if (circle) {
+      circle.setLatLng(pos);
+      circle.setRadius(radKm * 1000);
+    }
+    if (pan) {
+      map.setView(pos, 17);
+    }
+  }
+
+  function handleManualInputChange() {
+    const latVal = parseFloat(document.getElementById('lat').value);
+    const lngVal = parseFloat(document.getElementById('lng').value);
+    const radKm = parseFloat(document.getElementById('radius').value) || 0.02;
+
+    if (!isNaN(latVal) && !isNaN(lngVal)) {
+      updateMapPosition(latVal, lngVal, false);
+      if (map) map.panTo([latVal, lngVal]);
+    } else if (circle) {
+      circle.setRadius(radKm * 1000);
+    }
+  }
 
   // โหลดค่าที่บันทึกไว้
   window.onload = function() {
+    initMap();
+
+    document.getElementById('lat').addEventListener('input', handleManualInputChange);
+    document.getElementById('lng').addEventListener('input', handleManualInputChange);
+    document.getElementById('radius').addEventListener('input', handleManualInputChange);
+
     const savedUrl = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '');
     document.getElementById('apiUrl').value = savedUrl;
 
@@ -276,26 +390,130 @@
     fetch(apiUrl + '?action=getConfig')
       .then(r => r.json())
       .then(config => {
-        document.getElementById('lat').value    = (config.lat !== undefined && config.lat !== 0) ? config.lat : '';
-        document.getElementById('lng').value    = (config.lng !== undefined && config.lng !== 0) ? config.lng : '';
-        document.getElementById('radius').value = (config.radius !== undefined && config.radius !== '') ? config.radius : '0.02';
+        if (config.lat !== undefined && config.lat !== 0 && config.lat !== '') {
+          document.getElementById('lat').value = parseFloat(config.lat).toFixed(7);
+        }
+        if (config.lng !== undefined && config.lng !== 0 && config.lng !== '') {
+          document.getElementById('lng').value = parseFloat(config.lng).toFixed(7);
+        }
+        if (config.radius !== undefined && config.radius !== '') {
+          document.getElementById('radius').value = config.radius;
+        } else if (!document.getElementById('radius').value) {
+          document.getElementById('radius').value = '0.02';
+        }
+
+        const latVal = parseFloat(document.getElementById('lat').value);
+        const lngVal = parseFloat(document.getElementById('lng').value);
+        if (!isNaN(latVal) && !isNaN(lngVal)) {
+          updateMapPosition(latVal, lngVal, true);
+        }
       })
       .catch(() => {}); // ถ้าโหลดไม่ได้ก็ข้ามไป
   }
 
   function getCurrentLocation() {
-    if (!navigator.geolocation) return alert('Browser นี้ไม่รองรับ Geolocation');
-    navigator.geolocation.getCurrentPosition(
+    if (!navigator.geolocation) {
+      alert('Browser นี้ไม่รองรับ Geolocation');
+      return;
+    }
+
+    const btn = document.querySelector('.btn-get-loc');
+    const accInfo = document.getElementById('gpsAccuracyInfo');
+
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+    if (gpsTimeout !== null) {
+      clearTimeout(gpsTimeout);
+      gpsTimeout = null;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '📡 กำลังล็อกสัญญาณดาวเทียมที่แม่นยำที่สุด...';
+    accInfo.style.display = 'block';
+    accInfo.style.color = '#94a3b8';
+    accInfo.style.borderColor = 'rgba(255,255,255,0.15)';
+    accInfo.style.background = 'rgba(255,255,255,0.04)';
+    accInfo.innerHTML = '⏳ กำลังค้นหาสัญญาณดาวเทียม GPS...';
+
+    bestCoords = null;
+
+    const stopGpsLock = () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      if (gpsTimeout !== null) {
+        clearTimeout(gpsTimeout);
+        gpsTimeout = null;
+      }
+      btn.disabled = false;
+      btn.innerHTML = '📍 ดึงตำแหน่งปัจจุบันของฉัน';
+    };
+
+    // เก็บตัวอย่างพิกัดต่อเนื่องเป็นเวลา 5 วินาที
+    gpsTimeout = setTimeout(() => {
+      stopGpsLock();
+      if (!bestCoords) {
+        accInfo.style.color = '#f87171';
+        accInfo.style.borderColor = 'rgba(248,113,113,0.3)';
+        accInfo.style.background = 'rgba(248,113,113,0.1)';
+        accInfo.innerHTML = '⚠️ ไม่สามารถรับสัญญาณ GPS ได้ในเวลาที่กำหนด กรุณาลองใหม่อีกครั้ง';
+      }
+    }, 5000);
+
+    watchId = navigator.geolocation.watchPosition(
       pos => {
-        document.getElementById('lat').value = pos.coords.latitude;
-        document.getElementById('lng').value = pos.coords.longitude;
-        const radiusInput = document.getElementById('radius');
-        if (!radiusInput.value) {
-          radiusInput.value = '0.02'; // ตั้งค่าเริ่มต้น 20 เมตร
+        const acc = pos.coords.accuracy;
+        // เปรียบเทียบและเลือกเฉพาะพิกัดที่มีค่า accuracy ต่ำที่สุด (แม่นยำที่สุด)
+        if (!bestCoords || acc < bestCoords.accuracy) {
+          bestCoords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: acc
+          };
+
+          document.getElementById('lat').value = bestCoords.latitude.toFixed(7);
+          document.getElementById('lng').value = bestCoords.longitude.toFixed(7);
+
+          const radiusInput = document.getElementById('radius');
+          if (!radiusInput.value) {
+            radiusInput.value = '0.02';
+          }
+
+          // เลื่อนแผนที่และหมุดไปที่จุดนั้นแบบเรียลไทม์
+          updateMapPosition(bestCoords.latitude, bestCoords.longitude, true);
+
+          const accVal = Math.round(acc * 10) / 10;
+          if (acc <= 15) {
+            accInfo.style.color = '#34d399';
+            accInfo.style.borderColor = 'rgba(52,211,153,0.3)';
+            accInfo.style.background = 'rgba(52,211,153,0.08)';
+            accInfo.innerHTML = `🎯 ความแม่นยำสูงมาก (±${accVal} เมตร) — พิกัดตรงจุด`;
+          } else {
+            accInfo.style.color = '#fbbf24';
+            accInfo.style.borderColor = 'rgba(251,191,36,0.3)';
+            accInfo.style.background = 'rgba(251,191,36,0.08)';
+            accInfo.innerHTML = `⚠️ ความคลาดเคลื่อน ±${accVal} เมตร (หากหมุดไม่ตรงจุด สามารถใช้นิ้วลากหมุดบนแผนที่เพื่อปรับให้เป๊ะได้เลย)`;
+          }
+
+          // หากได้ค่าความแม่นยำ pos.coords.accuracy <= 8 เมตร ให้หยุดทันที
+          if (acc <= 8) {
+            stopGpsLock();
+          }
         }
-        alert('✅ ดึงพิกัดเรียบร้อย (พิกัดปัจจุบันถูกบันทึกลงในช่องแล้ว)');
       },
-      err => alert('❌ ไม่สามารถดึงตำแหน่งได้: ' + err.message)
+      err => {
+        if (!bestCoords) {
+          stopGpsLock();
+          accInfo.style.color = '#f87171';
+          accInfo.style.borderColor = 'rgba(248,113,113,0.3)';
+          accInfo.style.background = 'rgba(248,113,113,0.1)';
+          accInfo.innerHTML = '❌ ไม่สามารถดึงตำแหน่งได้: ' + (err.message || 'สัญญาณขัดข้อง');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
 
