@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --isuzu-red: #e60012;
@@ -21,7 +26,7 @@
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
       background-color: var(--isuzu-black);
-      background-image: 
+      background-image:
         radial-gradient(circle at 50% 0%, rgba(230, 0, 18, 0.28) 0%, transparent 60%),
         radial-gradient(circle at 100% 100%, rgba(255, 77, 0, 0.12) 0%, transparent 50%),
         linear-gradient(180deg, #111218 0%, #08090c 100%);
@@ -43,8 +48,8 @@
       height: 280px;
       background: url('img/banner.jpg') no-repeat center top / cover;
       opacity: 0.22;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
       pointer-events: none;
       z-index: 0;
     }
@@ -84,7 +89,7 @@
       position: absolute;
       width: 130px;
       height: 130px;
-      background: radial-gradient(circle, rgba(230,0,18,0.5) 0%, rgba(230,0,18,0) 70%);
+      background: radial-gradient(circle, rgba(230, 0, 18, 0.5) 0%, rgba(230, 0, 18, 0) 70%);
       filter: blur(16px);
       z-index: 0;
       animation: pulseGlow 3s ease-in-out infinite;
@@ -96,14 +101,14 @@
       object-fit: contain;
       position: relative;
       z-index: 1;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
     }
 
     .biturbo-badge {
       height: 26px;
       object-fit: contain;
       margin-bottom: 8px;
-      filter: drop-shadow(0 2px 8px rgba(230,0,18,0.4));
+      filter: drop-shadow(0 2px 8px rgba(230, 0, 18, 0.4));
     }
 
     h1 {
@@ -152,7 +157,12 @@
       text-align: center;
       animation: fadeIn 0.4s ease;
     }
-    .api-warning a { color: #fbbf24; font-weight: 700; text-decoration: underline; }
+
+    .api-warning a {
+      color: #fbbf24;
+      font-weight: 700;
+      text-decoration: underline;
+    }
 
     /* Menu Cards */
     .menu-cards {
@@ -183,16 +193,29 @@
     .btn-menu::before {
       content: '';
       position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
       transition: left 0.6s ease;
     }
-    .btn-menu:hover::before { left: 100%; }
 
-    .btn-menu:nth-child(1) { animation-delay: 0.1s; }
-    .btn-menu:nth-child(2) { animation-delay: 0.2s; }
-    .btn-menu:nth-child(3) { animation-delay: 0.3s; }
+    .btn-menu:hover::before {
+      left: 100%;
+    }
+
+    .btn-menu:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .btn-menu:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .btn-menu:nth-child(3) {
+      animation-delay: 0.3s;
+    }
 
     .btn-menu:hover {
       transform: translateY(-3px);
@@ -204,10 +227,12 @@
       border: 1.5px solid rgba(230, 0, 18, 0.55);
       box-shadow: 0 8px 25px rgba(230, 0, 18, 0.22);
     }
+
     .btn-scan:hover {
       border-color: #ff4d5a;
       box-shadow: 0 12px 35px rgba(230, 0, 18, 0.45);
     }
+
     .btn-scan .card-icon {
       background: linear-gradient(135deg, #e60012, #99000a);
       box-shadow: 0 4px 18px rgba(230, 0, 18, 0.55);
@@ -218,10 +243,12 @@
       background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(20, 26, 42, 0.85) 100%);
       border: 1px solid rgba(59, 130, 246, 0.35);
     }
+
     .btn-register:hover {
       border-color: rgba(96, 165, 250, 0.6);
       box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
     }
+
     .btn-register .card-icon {
       background: linear-gradient(135deg, #2563eb, #1e40af);
       box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
@@ -232,10 +259,12 @@
       background: linear-gradient(135deg, rgba(71, 85, 105, 0.15) 0%, rgba(22, 24, 34, 0.85) 100%);
       border: 1px solid rgba(148, 163, 184, 0.25);
     }
+
     .btn-config:hover {
       border-color: rgba(148, 163, 184, 0.5);
       box-shadow: 0 8px 25px rgba(100, 116, 139, 0.25);
     }
+
     .btn-config .card-icon {
       background: linear-gradient(135deg, #475569, #334155);
       box-shadow: 0 4px 12px rgba(71, 85, 105, 0.35);
@@ -252,7 +281,11 @@
       flex-shrink: 0;
     }
 
-    .card-text { flex: 1; text-align: left; }
+    .card-text {
+      flex: 1;
+      text-align: left;
+    }
+
     .card-title {
       font-size: 1.1em;
       font-weight: 700;
@@ -262,7 +295,11 @@
       align-items: center;
       gap: 6px;
     }
-    .card-desc { font-size: 0.82em; color: #94a3b8; }
+
+    .card-desc {
+      font-size: 0.82em;
+      color: #94a3b8;
+    }
 
     .card-arrow {
       font-size: 20px;
@@ -270,12 +307,15 @@
       font-weight: 700;
       transition: transform 0.25s ease, color 0.25s ease;
     }
+
     .btn-menu:hover .card-arrow {
       transform: translateX(5px);
       color: #ffffff;
     }
 
-    .btn-scan .card-arrow { color: #ff6b6b; }
+    .btn-scan .card-arrow {
+      color: #ff6b6b;
+    }
 
     /* Footer */
     .footer {
@@ -288,15 +328,47 @@
       align-items: center;
       gap: 4px;
     }
+
     .footer-highlight {
       color: #e2e8f0;
       font-weight: 600;
     }
 
     /* Animations */
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* Modal Password */
     .modal-overlay {
       display: none;
@@ -310,6 +382,7 @@
       justify-content: center;
       padding: 16px;
     }
+
     .modal-overlay.active {
       display: flex;
     }
@@ -372,11 +445,13 @@
       outline: none;
       transition: all 0.25s ease;
     }
+
     .pwd-input-wrap input:focus {
       border-color: rgba(230, 0, 18, 0.7);
       background: rgba(230, 0, 18, 0.05);
       box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.2);
     }
+
     .pwd-input-wrap input.error-shake {
       border-color: #f87171;
       animation: shake 0.4s ease;
@@ -398,6 +473,7 @@
       justify-content: center;
       transition: color 0.2s ease;
     }
+
     .btn-toggle-eye:hover {
       color: #ffffff;
     }
@@ -428,11 +504,13 @@
       cursor: pointer;
       transition: all 0.25s ease;
     }
+
     .btn-pwd-cancel {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #cbd5e1;
     }
+
     .btn-pwd-cancel:hover {
       background: rgba(255, 255, 255, 0.14);
       color: #ffffff;
@@ -443,26 +521,58 @@
       color: white;
       box-shadow: 0 4px 18px rgba(230, 0, 18, 0.4);
     }
+
     .btn-pwd-confirm:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 24px rgba(230, 0, 18, 0.6);
     }
 
     @keyframes modalPop {
-      0% { opacity: 0; transform: scale(0.92); }
-      100% { opacity: 1; transform: scale(1); }
+      0% {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
+
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-6px);
+      }
+
+      40%,
+      80% {
+        transform: translateX(6px);
+      }
     }
+
     @keyframes pulseGlow {
-      0%, 100% { opacity: 0.4; transform: scale(0.95); }
-      50% { opacity: 0.85; transform: scale(1.08); }
+
+      0%,
+      100% {
+        opacity: 0.4;
+        transform: scale(0.95);
+      }
+
+      50% {
+        opacity: 0.85;
+        transform: scale(1.08);
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div class="hero-banner-bg"></div>
@@ -474,7 +584,7 @@
         <img src="img/mascot.png" alt="ISUZU Buddy" class="mascot-img" onerror="this.style.display='none'">
       </div>
       <img src="img/biturbo-logo.png" alt="ISUZU BiTurbo" class="biturbo-badge" onerror="this.style.display='none'">
-      <div class="tsh-tag">ISUZU TSH • อีซูซุตังเซียฮวด</div>
+      <div class="tsh-tag">ISUZU TSH • อีซูซุตั้งเซียฮวด</div>
       <h1>ระบบบันทึกเวลาเข้างาน</h1>
       <p class="subtitle">Face Recognition &amp; GPS Attendance</p>
     </div>
@@ -488,7 +598,9 @@
       <a href="scan.html" class="btn-menu btn-scan">
         <div class="card-icon">📷</div>
         <div class="card-text">
-          <div class="card-title">สแกนเข้างาน <span style="font-size:0.7em; background:#e60012; padding:2px 8px; border-radius:10px; color:#fff;">แนะนำ</span></div>
+          <div class="card-title">สแกนเข้างาน <span
+              style="font-size:0.7em; background:#e60012; padding:2px 8px; border-radius:10px; color:#fff;">แนะนำ</span>
+          </div>
           <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + ตรวจสอบ GPS</div>
         </div>
         <span class="card-arrow">›</span>
@@ -517,7 +629,7 @@
 
     <div class="footer">
       <div>ระบบบันทึกเวลาปฏิบัติงานพนักงาน</div>
-      <div class="footer-highlight">บริษัท อีซูซุตังเซียฮวด จำกัด (ISUZU TSH)</div>
+      <div class="footer-highlight">บริษัท อีซูซุตั้งเซียฮวด จำกัด (ISUZU TSH)</div>
     </div>
   </div>
 
@@ -529,8 +641,10 @@
       <p class="modal-desc">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งานหน้าตั้งค่าระบบ</p>
 
       <div class="pwd-input-wrap">
-        <input type="password" id="adminPassword" placeholder="กรอกรหัสผ่าน Admin" autocomplete="off" onkeydown="handlePwdKey(event)">
-        <button type="button" class="btn-toggle-eye" id="btnEye" onclick="togglePasswordVisibility()" title="แสดง/ซ่อนรหัสผ่าน">
+        <input type="password" id="adminPassword" placeholder="กรอกรหัสผ่าน Admin" autocomplete="off"
+          onkeydown="handlePwdKey(event)">
+        <button type="button" class="btn-toggle-eye" id="btnEye" onclick="togglePasswordVisibility()"
+          title="แสดง/ซ่อนรหัสผ่าน">
           👁️
         </button>
       </div>
@@ -554,7 +668,7 @@
     const pwdModal = document.getElementById('pwdModal');
     const pwdInput = document.getElementById('adminPassword');
     const pwdError = document.getElementById('pwdError');
-    const btnEye   = document.getElementById('btnEye');
+    const btnEye = document.getElementById('btnEye');
 
     function openPasswordModal() {
       pwdInput.value = '';
@@ -607,11 +721,12 @@
     }
 
     // ปิด Modal เมื่อคลิกพื้นหลังสีดำ
-    pwdModal.addEventListener('click', function(e) {
+    pwdModal.addEventListener('click', function (e) {
       if (e.target === pwdModal) {
         closePasswordModal();
       }
     });
   </script>
 </body>
+
 </html>
