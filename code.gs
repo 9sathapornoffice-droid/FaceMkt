@@ -87,9 +87,26 @@ function registerUser(name, faceDescriptor) {
     return { success: false, error: 'Missing required fields' };
   }
 
+  name = String(name).trim();
+  if (!name) {
+    return { success: false, error: 'ชื่อพนักงานต้องไม่เป็นค่าว่าง' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Users');
   if (!sheet) sheet = ss.insertSheet('Users');
+
+  const data = sheet.getDataRange().getValues();
+  let count = 0;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim().toLowerCase() === name.toLowerCase()) {
+      count++;
+    }
+  }
+
+  if (count >= 3) {
+    return { success: false, error: 'ชื่อพนักงานนี้ได้ลงทะเบียนครบ 3 มุมแล้ว' };
+  }
 
   sheet.appendRow([name, JSON.stringify(faceDescriptor), new Date()]);
   return { success: true, message: 'บันทึกข้อมูลหน้าเรียบร้อย' };

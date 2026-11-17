@@ -324,14 +324,19 @@
   const gpsAlertBox    = document.getElementById('gps-alert-box');
   const btnStart       = document.getElementById('btnStart');
 
-  const MATCH_THRESHOLD = 0.45;
+  const MATCH_THRESHOLD = 0.39;
+  const AMBIGUOUS_MARGIN = 0.035;
 
-  let knownFaces   = [];
-  let isScanning   = false;
-  let scanTimeout  = null;
-  let currentMatch = null;
-  let currentLat   = null;
-  let currentLng   = null;
+  let groupedFaces           = [];
+  let ignoredNames           = [];
+  let lastMatchedName        = null;
+  let consecutiveMatchCount  = 0;
+  let ignoreResetTimer       = null;
+  let isScanning             = false;
+  let scanTimeout            = null;
+  let currentMatch           = null;
+  let currentLat             = null;
+  let currentLng             = null;
 
   // ตรวจสอบ In-App Browser (LINE, Facebook)
   function isInAppBrowser() {
@@ -430,10 +435,22 @@
       const data = await fetch(API_URL + '?action=getKnownFaces').then(r => r.json());
       if (!data || data.length === 0) return showError('ไม่พบข้อมูลพนักงาน กรุณาลงทะเบียนก่อน');
 
-      knownFaces = data.map(u => ({
-        name: u.label,
-        descriptor: new Float32Array(u.descriptor)
+      const faceMap = new Map();
+      data.forEach(u => {
+        const name = (u.label || '').trim();
+        if (!name || !u.descriptor) return;
+        if (!faceMap.has(name)) {
+          faceMap.set(name, []);
+        }
+        faceMap.get(name).push(new Float32Array(u.descriptor));
+      });
+
+      groupedFaces = Array.from(faceMap.entries()).map(([name, descriptors]) => ({
+        name,
+        descriptors
       }));
+
+      if (groupedFaces.length === 0) return showError('ไม่พบข้อมูลพนักงาน กรุณาลงทะเบียนก่อน');
 
       mainStatus.innerText    = '✅ ระบบพร้อมใช้งาน';
       mainStatus.style.color  = '#34d399';
@@ -471,6 +488,14 @@
 
   // ===== Camera =====
   async function startCamera() {
+    if (ignoreResetTimer) {
+      clearTimeout(ignoreResetTimer);
+      ignoreResetTimer = null;
+    }
+    ignoredNames = [];
+    lastMatchedName = null;
+    consecutiveMatchCount = 0;
+
     btnStart.style.display = 'none';
     mainStatus.innerText   = 'กำลังเปิดกล้อง...';
     mainStatus.style.color = '#94a3b8';
@@ -542,18 +567,42 @@
 
       if (detection) {
         const best = findBestMatch(detection.descriptor);
-        if (best.distance < MATCH_THRESHOLD) {
-          stopScanLoop();
-          const scanLine = document.getElementById('scanLine');
-          if (scanLine) scanLine.classList.remove('active');
-          showModal(best);
-          return;
+
+        if (best.isAmbiguous) {
+          lastMatchedName = null;
+          consecutiveMatchCount = 0;
+          overlayStatus.innerText = 'กำลังโฟกัสใบหน้าให้ชัดเจนขึ้น...';
+          overlayStatus.style.background = 'rgba(234, 179, 8, 0.85)';
+        } else if (best.score < MATCH_THRESHOLD) {
+          if (lastMatchedName === best.name) {
+            consecutiveMatchCount++;
+          } else {
+            lastMatchedName = best.name;
+            consecutiveMatchCount = 1;
+          }
+
+          if (consecutiveMatchCount >= 2) {
+            stopScanLoop();
+            lastMatchedName = null;
+            consecutiveMatchCount = 0;
+            const scanLine = document.getElementById('scanLine');
+            if (scanLine) scanLine.classList.remove('active');
+            showModal(best);
+            return;
+          } else {
+            overlayStatus.innerText = 'กำลังยืนยันตัวตน...';
+            overlayStatus.style.background = 'rgba(16, 185, 129, 0.85)';
+          }
         } else {
-          overlayStatus.innerText = 'ไม่รู้จัก (' + best.distance.toFixed(2) + ')';
+          lastMatchedName = null;
+          consecutiveMatchCount = 0;
+          overlayStatus.innerText = 'ไม่รู้จัก (' + best.score.toFixed(2) + ')';
           overlayStatus.style.background = 'rgba(230, 0, 18, 0.7)';
         }
       } else {
         // รีเซ็ตสถานะเมื่อไม่พบใบหน้า
+        lastMatchedName = null;
+        consecutiveMatchCount = 0;
         overlayStatus.innerText = 'มองกล้องเพื่อสแกน';
         overlayStatus.style.background = 'rgba(11, 12, 16, 0.85)';
       }
@@ -567,12 +616,56 @@
   }
 
   function findBestMatch(queryDesc) {
-    let best = { name: 'unknown', distance: 1.0 };
-    knownFaces.forEach(u => {
-      const d = faceapi.euclideanDistance(queryDesc, u.descriptor);
-      if (d < best.distance) best = { name: u.name, distance: d };
-    });
-    return best;
+    const candidates = [];
+
+    for (const person of groupedFaces) {
+      // 3. ข้ามรายชื่อที่อยู่ในตัวแปร ignoredNames (สำหรับกรณีผู้ใช้กดปุ่ม "ไม่ใช่ฉัน")
+      if (ignoredNames.includes(person.name)) continue;
+      if (!person.descriptors || person.descriptors.length === 0) continue;
+
+      // 1. คำนวณระยะห่างของ queryDesc เทียบกับทุกมุมของพนักงานแต่ละคน
+      let minDistance = Infinity;
+      let sumDistance = 0;
+
+      for (const d of person.descriptors) {
+        const dist = faceapi.euclideanDistance(queryDesc, d);
+        if (dist < minDistance) minDistance = dist;
+        sumDistance += dist;
+      }
+
+      const avgDistance = sumDistance / person.descriptors.length;
+      // 2. คำนวณคะแนนผสม (Combined Score): score = (minDistance * 0.6) + (avgDistance * 0.4)
+      const score = (minDistance * 0.6) + (avgDistance * 0.4);
+
+      candidates.push({
+        name: person.name,
+        score: score,
+        minDistance: minDistance
+      });
+    }
+
+    if (candidates.length === 0) {
+      return { name: 'unknown', score: 1.0, distance: 1.0, isAmbiguous: false };
+    }
+
+    // 4. เรียงลำดับพนักงานที่ได้ score ต่ำที่สุดอันดับ 1 (best) และอันดับ 2 (secondBest)
+    candidates.sort((a, b) => a.score - b.score);
+
+    const best = candidates[0];
+    const secondBest = candidates.length > 1 ? candidates[1] : null;
+
+    // 5. ป้องกันใบหน้ากำกวม (Ambiguity Check): หาก secondBest.score - best.score < AMBIGUOUS_MARGIN
+    let isAmbiguous = false;
+    if (secondBest && (secondBest.score - best.score < AMBIGUOUS_MARGIN)) {
+      isAmbiguous = true;
+    }
+
+    return {
+      name: best.name,
+      score: best.score,
+      distance: best.minDistance,
+      isAmbiguous: isAmbiguous
+    };
   }
 
   // ===== Modal =====
@@ -584,7 +677,7 @@
     const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     document.getElementById('modalTime').innerText  = 'เวลาเข้างาน: ' + timeStr + ' น.';
 
-    const pct = ((1 - match.distance) * 100).toFixed(1);
+    const pct = ((1 - match.score) * 100).toFixed(1);
     document.getElementById('modalScore').innerText = 'ความเหมือน: ' + pct + '%';
 
     confirmModal.style.display = 'flex';
@@ -619,6 +712,8 @@
 
   function stopCamera() {
     stopScanLoop();
+    lastMatchedName = null;
+    consecutiveMatchCount = 0;
     if (video && video.srcObject) {
       video.srcObject.getTracks().forEach(t => t.stop());
       video.srcObject = null;
@@ -633,14 +728,26 @@
 
   function cancelAttendance() {
     confirmModal.style.display = 'none';
-    currentMatch = null;
-    stopCamera();
 
-    mainStatus.innerText    = '✅ ระบบพร้อมใช้งาน';
-    mainStatus.style.color  = '#34d399';
-    overlayStatus.innerText = 'รอโหลด...';
-    overlayStatus.style.background = 'rgba(11, 12, 16, 0.85)';
-    btnStart.style.display  = 'inline-block';
+    // 1. นำชื่อ currentMatch ไปเก็บใน Array ignoredNames
+    if (currentMatch && !ignoredNames.includes(currentMatch)) {
+      ignoredNames.push(currentMatch);
+    }
+    currentMatch = null;
+    lastMatchedName = null;
+    consecutiveMatchCount = 0;
+
+    // รีเซ็ต ignoredNames = [] เมื่อครบ 15 วินาที
+    if (ignoreResetTimer) clearTimeout(ignoreResetTimer);
+    ignoreResetTimer = setTimeout(() => {
+      ignoredNames = [];
+    }, 15000);
+
+    const scanLine = document.getElementById('scanLine');
+    if (scanLine) scanLine.classList.add('active');
+
+    // 2. ปิด Modal แต่ ไม่ต้องปิดกล้อง (ไม่ต้องเรียก stopCamera()) ให้เรียก startScanLoop() เพื่อสแกนหาคนที่ถูกต้องต่อทันที
+    startScanLoop();
   }
 
   // ===== Helpers =====
