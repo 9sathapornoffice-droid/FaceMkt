@@ -746,6 +746,9 @@
     const scanLine = document.getElementById('scanLine');
     if (scanLine) scanLine.classList.add('active');
 
+    mainStatus.innerText   = '✅ กำลังสแกน...';
+    mainStatus.style.color = '#34d399';
+
     // 2. ปิด Modal แต่ ไม่ต้องปิดกล้อง (ไม่ต้องเรียก stopCamera()) ให้เรียก startScanLoop() เพื่อสแกนหาคนที่ถูกต้องต่อทันที
     startScanLoop();
   }

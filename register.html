@@ -649,36 +649,33 @@
       return;
     }
 
-    // 2. เช็คใบหน้าซ้ำกับคนอื่น (เฉพาะตอนเริ่มบันทึกมุมที่ 1)
-    if (saveCounter === 0) {
-      let minDistance = 1.0;
-      let matchedEmployee = '';
-
-      for (const u of existingUsers) {
-        if (u.name.toLowerCase() === name.toLowerCase()) continue;
-        const d = faceapi.euclideanDistance(detection.descriptor, u.descriptor);
-        if (d < minDistance) {
-          minDistance = d;
-          matchedEmployee = u.name;
-        }
+    // เช็คใบหน้าซ้ำกับคนอื่นในทุกมุม (มุม 1, 2, 3)
+    let minDistance = 1.0;
+    let matchedEmployee = '';
+    for (const u of existingUsers) {
+      if (u.name.toLowerCase() === name.toLowerCase()) continue;
+      const d = faceapi.euclideanDistance(detection.descriptor, u.descriptor);
+      if (d < minDistance) {
+        minDistance = d;
+        matchedEmployee = u.name;
       }
+    }
+    if (minDistance < 0.38) {
+      const similarityPct = Math.round((1 - minDistance) * 100);
+      alert(`🚫 ไม่สามารถลงทะเบียนได้! ใบหน้านี้ซ้ำหรือคล้ายคลึงกับพนักงานในระบบ: ${matchedEmployee} (ความคล้าย: ${similarityPct}%)`);
+      updateSaveButton(getButtonLabel(saveCounter), false);
+      return;
+    }
 
-      if (minDistance < 0.38) {
-        const similarityPct = Math.round((1 - minDistance) * 100);
-        alert(`🚫 ไม่สามารถลงทะเบียนได้! ใบหน้านี้ซ้ำหรือคล้ายคลึงกับพนักงานในระบบ: ${matchedEmployee} (ความคล้าย: ${similarityPct}%)`);
+    // เช็คมุมซ้ำในตัวเองเทียบกับทุกมุมที่ถ่ายไปแล้ว (เฉพาะมุมที่ 2 และ 3)
+    if (saveCounter > 0 && sessionDescriptors.length > 0) {
+      const isTooSimilarToSelf = sessionDescriptors.some(
+        prevDesc => faceapi.euclideanDistance(detection.descriptor, prevDesc) < 0.12
+      );
+      if (isTooSimilarToSelf) {
+        alert('⚠️ กรุณาหันหน้าเปลี่ยนมุมเล็กน้อยเพื่อให้ระบบจำโครงหน้าได้แม่นยำขึ้น');
         updateSaveButton(getButtonLabel(saveCounter), false);
         return;
-      }
-    } else {
-      // 4. เช็คมุมซ้ำในตัวเอง (saveCounter === 1 หรือ 2)
-      if (sessionDescriptors.length > 0) {
-        const prevDesc = sessionDescriptors[sessionDescriptors.length - 1];
-        const distFromPrev = faceapi.euclideanDistance(detection.descriptor, prevDesc);
-        if (distFromPrev < 0.12) {
-          alert('⚠️ กรุณาหันหน้าเปลี่ยนมุมเล็กน้อยเพื่อให้ระบบจำโครงหน้าได้แม่นยำขึ้น');
-          updateSaveButton(getButtonLabel(saveCounter), false);
-          return;
-        }
       }
     }
 

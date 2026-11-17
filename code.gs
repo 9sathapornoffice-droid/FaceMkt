@@ -92,6 +92,10 @@ function registerUser(name, faceDescriptor) {
     return { success: false, error: 'ชื่อพนักงานต้องไม่เป็นค่าว่าง' };
   }
 
+  if (!Array.isArray(faceDescriptor) || faceDescriptor.length !== 128) {
+    return { success: false, error: 'ข้อมูลโครงสร้างใบหน้าไม่สมบูรณ์ (ต้องมี 128 ค่า)' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Users');
   if (!sheet) sheet = ss.insertSheet('Users');
