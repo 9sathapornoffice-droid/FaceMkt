@@ -654,9 +654,9 @@
     const best = candidates[0];
     const secondBest = candidates.length > 1 ? candidates[1] : null;
 
-    // 5. ป้องกันใบหน้ากำกวม (Ambiguity Check): หาก secondBest.score - best.score < AMBIGUOUS_MARGIN
+    // 5. ป้องกันใบหน้ากำกวม (Ambiguity Check): ทำงานเฉพาะเมื่อ best.score ผ่านเกณฑ์ MATCH_THRESHOLD
     let isAmbiguous = false;
-    if (secondBest && (secondBest.score - best.score < AMBIGUOUS_MARGIN)) {
+    if (best.score < MATCH_THRESHOLD && secondBest && (secondBest.score - best.score < AMBIGUOUS_MARGIN)) {
       isAmbiguous = true;
     }
 
