@@ -1,0 +1,24 @@
+{
+  "name": "ISUZU TSH Face Scan",
+  "short_name": "ISUZU Scan",
+  "description": "ระบบบันทึกเวลาเข้างานด้วยใบหน้าและ GPS — ISUZU TANG SIA HUAT NAKHON PATHOM",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#e60012",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

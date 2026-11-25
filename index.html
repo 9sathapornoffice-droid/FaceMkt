@@ -3,8 +3,16 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ระบบบันทึกเวลาเข้างาน — ISUZU TSH</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e60012">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ISUZU Scan">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <style>
@@ -342,6 +350,148 @@
       letter-spacing: 0.5px;
     }
 
+    /* PWA Install Button */
+    .btn-install-pwa {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(230, 0, 18, 0.15) 0%, rgba(22, 24, 34, 0.85) 100%);
+      border: 1px solid rgba(230, 0, 18, 0.35);
+      border-radius: 18px;
+      color: #f1f5f9;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-install-pwa:hover {
+      background: linear-gradient(135deg, rgba(230, 0, 18, 0.25) 0%, rgba(28, 30, 42, 0.95) 100%);
+      border-color: rgba(230, 0, 18, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(230, 0, 18, 0.2);
+    }
+
+    .install-icon {
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(230, 0, 18, 0.2);
+      border: 1px solid rgba(230, 0, 18, 0.4);
+      flex-shrink: 0;
+    }
+
+    .install-text {
+      flex: 1;
+    }
+
+    .install-title {
+      font-size: 0.92em;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .install-desc {
+      font-size: 0.76em;
+      color: #94a3b8;
+    }
+
+    .install-badge {
+      font-size: 0.68em;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #cbd5e1;
+      white-space: nowrap;
+    }
+
+    /* Install Guide Modal */
+    .guide-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .guide-tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88em;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .guide-tab-btn.active {
+      background: #e60012;
+      border-color: #e60012;
+      color: #ffffff;
+    }
+
+    .guide-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(230, 0, 18, 0.2);
+      border: 1px solid #e60012;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82em;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      font-size: 0.84em;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .step-content b {
+      color: #ffffff;
+    }
+
+    .guide-box-tip {
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.78em;
+      color: #fde047;
+      margin-top: 10px;
+      text-align: left;
+      line-height: 1.4;
+    }
+
     /* Animations */
     @keyframes fadeIn {
       from {
@@ -635,10 +785,75 @@
       </a>
     </div>
 
+    <!-- ปุ่มสร้างทางลัดหน้าจอ (iOS / Android) -->
+    <button type="button" id="btnInstallApp" class="btn-install-pwa" onclick="handleInstallClick()">
+      <span class="install-icon">📲</span>
+      <div class="install-text">
+        <div class="install-title">ติดตั้งทางลัดลงหน้าจอมือถือ</div>
+        <div class="install-desc">เข้าใช้งานสะดวกรวดเร็วแบบเต็มจอ ไม่ต้องพิมพ์เว็บ</div>
+      </div>
+      <span class="install-badge">iOS / Android</span>
+    </button>
+
     <div class="footer">
       <div>ระบบบันทึกเวลาปฏิบัติงานพนักงาน</div>
       <div class="footer-highlight">ISUZU TANG SIA HUAT NAKHON PATHOM</div>
       <div class="footer-dev">Developed by Sathaporn Marketing</div>
+    </div>
+  </div>
+
+  <!-- PWA Install Guide Modal -->
+  <div id="installGuideModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-icon-shield" style="font-size:36px;margin-bottom:8px;">📲</div>
+      <h3>วิธีสร้างทางลัดลงหน้าจอมือถือ</h3>
+      <p class="modal-desc" style="margin-bottom:6px;">เปิดใช้งานแบบเต็มจอเหมือนแอปจริง ไม่ต้องเข้าเบราว์เซอร์</p>
+
+      <div class="guide-tabs">
+        <button type="button" class="guide-tab-btn active" id="tabIosBtn" onclick="switchGuideTab('ios')">🍎 iPhone / iPad</button>
+        <button type="button" class="guide-tab-btn" id="tabAndroidBtn" onclick="switchGuideTab('android')">🤖 Android</button>
+      </div>
+
+      <!-- Tab iOS -->
+      <div id="guideIosContent">
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-content">เปิดหน้านี้ด้วย <b>Safari</b> แล้วแตะปุ่ม <b>แชร์ (Share)</b> <span style="font-size:1.2em;">📤</span> ที่แถบเมนูด้านล่าง</div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-content">เลื่อนลงมาแล้วแตะที่เมนู <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</b> <span style="font-size:1.1em;">➕</span></div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-content">แตะปุ่ม <b>"เพิ่ม" (Add)</b> ที่มุมขวาบน จะได้ไอคอนแอปบนหน้าจอมือถือทันที</div>
+        </div>
+        <div class="guide-box-tip">💡 <b>คำแนะนำ:</b> ต้องเปิดผ่านเบราว์เซอร์ Safari เท่านั้น (หากเปิดจาก LINE ให้กด ... แล้วเลือก "เปิดใน Safari")</div>
+      </div>
+
+      <!-- Tab Android -->
+      <div id="guideAndroidContent" style="display:none;">
+        <div id="androidDirectInstall" style="display:none;margin-bottom:14px;">
+          <button type="button" class="btn-confirm-save" style="margin-top:0;" onclick="triggerAndroidInstall()">
+            📥 กดเพื่อติดตั้งแอปทันที
+          </button>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-content">เปิดหน้านี้ด้วย <b>Google Chrome</b> แล้วแตะที่ปุ่ม <b>จุด 3 จุด ( ⋮ )</b> มุมขวาบน</div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-content">เลือกเมนู <b>"ติดตั้งแอป" (Install app)</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก" (Add to Home screen)</b></div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-content">กด <b>"ติดตั้ง" (Install)</b> ระบบจะสร้างไอคอนแอปลงบนหน้าจอโฮมของคุณ</div>
+        </div>
+        <div class="guide-box-tip">💡 <b>คำแนะนำ:</b> รองรับ Chrome, Samsung Internet และเบราว์เซอร์มาตรฐานบน Android ทุกรุ่น</div>
+      </div>
+
+      <button type="button" class="btn-cancel-modal" style="margin-top:16px;" onclick="closeInstallGuideModal()">ปิดหน้าต่างนี้</button>
     </div>
   </div>
 
@@ -735,6 +950,115 @@
         closePasswordModal();
       }
     });
+
+    const installGuideModal = document.getElementById('installGuideModal');
+    if (installGuideModal) {
+      installGuideModal.addEventListener('click', function (e) {
+        if (e.target === installGuideModal) {
+          closeInstallGuideModal();
+        }
+      });
+    }
+
+    // ===== PWA & Add to Home Screen Handler =====
+    let deferredPrompt = null;
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (isStandalone) {
+      const btn = document.getElementById('btnInstallApp');
+      if (btn) {
+        btn.innerHTML = '<span class="install-icon">✅</span><div class="install-text"><div class="install-title">เปิดผ่านแอปบนหน้าจอมือถือ</div><div class="install-desc">พร้อมใช้งานแบบเต็มจอเรียบร้อยแล้ว</div></div>';
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btnInstallApp');
+      if (btn && !isStandalone) {
+        btn.style.borderColor = '#e60012';
+        const titleEl = btn.querySelector('.install-title');
+        if (titleEl) titleEl.textContent = '⚡ ติดตั้งแอปนี้ลงหน้าจอโฮมทันที';
+      }
+      const androidDirectBtn = document.getElementById('androidDirectInstall');
+      if (androidDirectBtn) androidDirectBtn.style.display = 'block';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const btn = document.getElementById('btnInstallApp');
+      if (btn) {
+        btn.innerHTML = '<span class="install-icon">✅</span><div class="install-text"><div class="install-title">ติดตั้งลงหน้าจอมือถือแล้ว</div><div class="install-desc">เข้าใช้งานผ่านไอคอนบนหน้าจอโฮมได้เลย</div></div>';
+      }
+    });
+
+    function handleInstallClick() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+        return;
+      }
+      openInstallGuideModal();
+    }
+
+    function triggerAndroidInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          closeInstallGuideModal();
+        });
+      }
+    }
+
+    function openInstallGuideModal() {
+      const modal = document.getElementById('installGuideModal');
+      if (!modal) return;
+      if (isIos) {
+        switchGuideTab('ios');
+      } else {
+        switchGuideTab('android');
+      }
+      modal.classList.add('active');
+    }
+
+    function closeInstallGuideModal() {
+      const modal = document.getElementById('installGuideModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function switchGuideTab(os) {
+      const tabIosBtn = document.getElementById('tabIosBtn');
+      const tabAndroidBtn = document.getElementById('tabAndroidBtn');
+      const guideIos = document.getElementById('guideIosContent');
+      const guideAndroid = document.getElementById('guideAndroidContent');
+
+      if (!tabIosBtn || !tabAndroidBtn || !guideIos || !guideAndroid) return;
+
+      if (os === 'ios') {
+        tabIosBtn.classList.add('active');
+        tabAndroidBtn.classList.remove('active');
+        guideIos.style.display = 'block';
+        guideAndroid.style.display = 'none';
+      } else {
+        tabAndroidBtn.classList.add('active');
+        tabIosBtn.classList.remove('active');
+        guideIos.style.display = 'none';
+        guideAndroid.style.display = 'block';
+      }
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.warn('SW register fail:', err);
+        });
+      });
+    }
   </script>
 </body>
 
