@@ -1,5 +1,7 @@
 // ============================================================
-//  GOOGLE APPS SCRIPT — REST API Backend (ISUZU TSH)
+//  GOOGLE APPS SCRIPT — REST API Backend
+//  ISUZU TANG SIA HUAT NAKHON PATHOM
+//  Developed by Sathaporn Marketing
 //  วิธีใช้: Deploy > New deployment > Web App
 //           Execute as: Me | Who has access: Anyone
 // ============================================================

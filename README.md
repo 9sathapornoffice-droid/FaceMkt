@@ -244,5 +244,7 @@ MIT License — ใช้งานได้อิสระ แก้ไขแล
 ---
 
 <div align="center">
-  <sub>Built with ❤️ · face-api.js · Google Apps Script · Netlify</sub>
+  <sub>Built with ❤️ · face-api.js · Google Apps Script · Netlify</sub><br><br>
+  <strong>Developed by Sathaporn Marketing</strong><br>
+  <strong>ISUZU TANG SIA HUAT NAKHON PATHOM</strong>
 </div>
